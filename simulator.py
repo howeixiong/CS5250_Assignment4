@@ -60,10 +60,12 @@ def RR_scheduling(process_list, time_quantum ):
             time_to_go = process.arrive_time - current_time
             while (time_to_go > 0):
                 if len(ready_queue) == 0:
+                    current_time = process.arrive_time
+                    time_to_go = 0
                     break
                 process_id, quantum, burst = ready_queue[0]
                 if (process_id != last_scheduled_id):
-                    schedule.append((current_time,process.id))
+                    schedule.append((current_time,process_id))
                     last_scheduled_id = process_id
                 while True:
                     ready_queue[0][1] = quantum = quantum - 1
@@ -76,22 +78,19 @@ def RR_scheduling(process_list, time_quantum ):
                         break
                     if quantum == 0:
                         ready_queue.pop(0)
-                        ready_queue.insert([process_id, time_quantum, burst])
+                        ready_queue.append([process_id, time_quantum, burst])
                         break
                     if time_to_go == 0:
                         break
-        ready_queue.insert([process.id, time_quantum, process.burst_time])
+        ready_queue.append([process.id, time_quantum, process.burst_time])
     while (len(ready_queue) > 0):
-            if len(ready_queue) == 0:
-                break
             process_id, quantum, burst = ready_queue[0]
             if (process_id != last_scheduled_id):
-                schedule.append((current_time,process.id))
+                schedule.append((current_time,process_id))
                 last_scheduled_id = process_id
             while True:
                 ready_queue[0][1] = quantum = quantum - 1
                 ready_queue[0][2] = burst = burst - 1
-                time_to_go = time_to_go - 1
                 current_time = current_time + 1
                 total_waiting_time = total_waiting_time + len(ready_queue) - 1
                 if burst == 0:
@@ -99,12 +98,10 @@ def RR_scheduling(process_list, time_quantum ):
                     break
                 if quantum == 0:
                     ready_queue.pop(0)
-                    ready_queue.insert([process_id, time_quantum, burst])
+                    ready_queue.append([process_id, time_quantum, burst])
                     break
-                if time_to_go == 0:
-                    break
-    average_waiting_time = waiting_time/float(len(process_list))
-    return (["to be completed, scheduling process_list on round robin policy with time_quantum"], 0.0)
+    average_waiting_time = total_waiting_time/float(len(process_list))
+    return schedule, average_waiting_time
 
 def SRTF_scheduling(process_list):
     return (["to be completed, scheduling process_list on SRTF, using process.burst_time to calculate the remaining time of the current process "], 0.0)
