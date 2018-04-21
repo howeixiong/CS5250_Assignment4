@@ -50,6 +50,60 @@ def FCFS_scheduling(process_list):
 #Output_1 : Schedule list contains pairs of (time_stamp, proccess_id) indicating the time switching to that proccess_id
 #Output_2 : Average Waiting Time
 def RR_scheduling(process_list, time_quantum ):
+    schedule = []
+    ready_queue = []
+    current_time = 0
+    total_waiting_time = 0
+    last_scheduled_id = -1
+    for process in process_list:
+        if (current_time < process.arrive_time):
+            time_to_go = process.arrive_time - current_time
+            while (time_to_go > 0):
+                if len(ready_queue) == 0:
+                    break
+                process_id, quantum, burst = ready_queue[0]
+                if (process_id != last_scheduled_id):
+                    schedule.append((current_time,process.id))
+                    last_scheduled_id = process_id
+                while True:
+                    ready_queue[0][1] = quantum = quantum - 1
+                    ready_queue[0][2] = burst = burst - 1
+                    time_to_go = time_to_go - 1
+                    current_time = current_time + 1
+                    total_waiting_time = total_waiting_time + len(ready_queue) - 1
+                    if burst == 0:
+                        ready_queue.pop(0)
+                        break
+                    if quantum == 0:
+                        ready_queue.pop(0)
+                        ready_queue.insert([process_id, time_quantum, burst])
+                        break
+                    if time_to_go == 0:
+                        break
+        ready_queue.insert([process.id, time_quantum, process.burst_time])
+    while (len(ready_queue) > 0):
+            if len(ready_queue) == 0:
+                break
+            process_id, quantum, burst = ready_queue[0]
+            if (process_id != last_scheduled_id):
+                schedule.append((current_time,process.id))
+                last_scheduled_id = process_id
+            while True:
+                ready_queue[0][1] = quantum = quantum - 1
+                ready_queue[0][2] = burst = burst - 1
+                time_to_go = time_to_go - 1
+                current_time = current_time + 1
+                total_waiting_time = total_waiting_time + len(ready_queue) - 1
+                if burst == 0:
+                    ready_queue.pop(0)
+                    break
+                if quantum == 0:
+                    ready_queue.pop(0)
+                    ready_queue.insert([process_id, time_quantum, burst])
+                    break
+                if time_to_go == 0:
+                    break
+    average_waiting_time = waiting_time/float(len(process_list))
     return (["to be completed, scheduling process_list on round robin policy with time_quantum"], 0.0)
 
 def SRTF_scheduling(process_list):
