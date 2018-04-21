@@ -82,24 +82,27 @@ def RR_scheduling(process_list, time_quantum ):
                         break
                     if time_to_go == 0:
                         break
-        ready_queue.append([process.id, time_quantum, process.burst_time])
+        new_process = True
+        for index, element in enumerate(ready_queue):
+            process_id, quantum, burst = element
+            if (process.id == process_id):
+                new_process = False
+                burst = burst + process.burst_time
+                break
+        if new_process:
+            ready_queue.append([process.id, time_quantum, process.burst_time])
+    # code easier now that only two values left
     while (len(ready_queue) > 0):
             process_id, quantum, burst = ready_queue[0]
             if (process_id != last_scheduled_id):
                 schedule.append((current_time,process_id))
                 last_scheduled_id = process_id
-            while True:
-                ready_queue[0][1] = quantum = quantum - 1
-                ready_queue[0][2] = burst = burst - 1
-                current_time = current_time + 1
-                total_waiting_time = total_waiting_time + len(ready_queue) - 1
-                if burst == 0:
-                    ready_queue.pop(0)
-                    break
-                if quantum == 0:
-                    ready_queue.pop(0)
-                    ready_queue.append([process_id, time_quantum, burst])
-                    break
+            jump_time = min(quantum, burst)
+            current_time = current_time + jump_time
+            total_waiting_time = total_waiting_time + (len(ready_queue) - 1) * jump_time
+            ready_queue.pop(0)
+            if burst > jump_time:
+                ready_queue.append([process_id, time_quantum, burst - jump_time])
     average_waiting_time = total_waiting_time/float(len(process_list))
     return schedule, average_waiting_time
 
