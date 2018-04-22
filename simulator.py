@@ -116,7 +116,6 @@ def SRTF_scheduling(process_list):
     for process in process_list:
         if (current_time < process.arrive_time):
             time_to_go = process.arrive_time - current_time
-            print "time to go: %s" % time_to_go
             while (time_to_go > 0):
                 if len(ready_queue) == 0:
                     current_time = process.arrive_time
@@ -124,25 +123,19 @@ def SRTF_scheduling(process_list):
                 burst, process_id = heapq.heappop(ready_queue)
                 if (process_id != last_scheduled_id):
                     schedule.append((current_time,process_id))
-                    print "Scheduling process %d at time %d" % (process_id, current_time)
                     last_scheduled_id = process_id
                 if (time_to_go < burst):
-                    print "Process %d runs for %d time" % (process_id, time_to_go)
                     burst = burst - time_to_go
                     heapq.heappush(ready_queue, [burst, process_id])
-                    print "Process %d has %d time left" % (process_id, burst)
-                    print ready_queue
                     current_time = current_time + time_to_go
                     total_waiting_time = total_waiting_time + (len(ready_queue) - 1) * time_to_go
                     time_to_go = 0
                     break
-                print "Process %d runs for %d time" % (process_id, burst)
                 time_to_go = time_to_go - burst
                 current_time = current_time + burst
                 total_waiting_time = total_waiting_time + len(ready_queue) * burst
+        # i think need to deal with the case where the process is there already
         heapq.heappush(ready_queue, [process.burst_time, process.id])
-        print "Inserting process %d with time %d" % (process.id, process.burst_time)
-        print ready_queue
     # code easier now
     while (len(ready_queue) > 0):
         burst, process_id = heapq.heappop(ready_queue)
@@ -156,7 +149,45 @@ def SRTF_scheduling(process_list):
     return schedule, average_waiting_time
 
 def SJF_scheduling(process_list, alpha):
-    return (["to be completed, scheduling SJF without using information from process.burst_time"],0.0)
+    #store the (switching time, process_id) pair
+    schedule = []
+    ready_queue = []
+    past_predicted_time = {}
+    actual_time = {}
+    current_time = 0
+    total_waiting_time = 0
+    last_scheduled_id = -1
+    for process in process_list:
+        while (current_time < process.arrive_time):
+            if len(ready_queue) == 0:
+                current_time = process.arrive_time
+                break
+            burst, process_id = heapq.heappop(ready_queue)
+            if (process_id != last_scheduled_id):
+                schedule.append((current_time,process_id))
+                last_scheduled_id = process_id
+            
+            current_time = current_time + burst
+            total_waiting_time = total_waiting_time + len(ready_queue) * burst
+        # i think need to deal with the case where the process is there already
+        if process.id in past_predicted_time:
+            predicted_time = alpha * actual_time[process.id] + (1 - alpha) * past_predicted_time[process.id]
+        else:
+            predicted_time = 5
+        past_predicted_time[process.id] = predicted_time
+        actual_time[process.id] = process.burst_time
+        heapq.heappush(ready_queue, [predicted_time, process.id])
+    # code easier now
+    while (len(ready_queue) > 0):
+        burst, process_id = heapq.heappop(ready_queue)
+        if (process_id != last_scheduled_id):
+            schedule.append((current_time,process_id))
+            last_scheduled_id = process_id
+        current_time = current_time + burst
+        total_waiting_time = total_waiting_time + len(ready_queue) * burst
+        
+    average_waiting_time = total_waiting_time/float(len(process_list))
+    return schedule, average_waiting_time
 
 
 def read_input():
