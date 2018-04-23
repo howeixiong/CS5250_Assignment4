@@ -24,7 +24,6 @@ import heapq # priority queue
 input_file = 'input.txt'
 
 class Process:
-    last_scheduled_time = 0
     def __init__(self, id, arrive_time, burst_time):
         self.id = id
         self.arrive_time = arrive_time
@@ -50,47 +49,59 @@ def FCFS_scheduling(process_list):
 #Input: process_list, time_quantum (Positive Integer)
 #Output_1 : Schedule list contains pairs of (time_stamp, process_id) indicating the time switching to that process_id
 #Output_2 : Average Waiting Time
+class Process_RR:
+    def __init__(self, id, burst_time, quantum, earliest_end_time):
+        self.id = id
+        self.burst_time = burst_time
+        self.quantum = quantum
+        self.earliest_end_time = earliest_end_time
+
 def RR_scheduling(process_list, time_quantum ):
     process_index = 0
-    current_time = 0
     ready_queue = []
+    current_time = 0
     last_scheduled_id = -1
     schedule = []
     waiting_time = 0
 
+    # what should I do at this current time?
     while (process_index < len(process_list)) or (len(ready_queue) > 0): # while there is something to do
         if process_index < len(process_list):
             new_process = process_list[process_index]
             
             # append process to queue if it has arrived
             if new_process.arrive_time == current_time:
-                ready_queue.append( [new_process.id, new_process.burst, time_quantum, new_process.arrive_time + new_process.burst] )
+                ready_queue.append( Process_RR(new_process.id, new_process.burst_time, time_quantum, new_process.arrive_time + new_process.burst_time) )
                 process_index += 1
-          
-        # what should I do at this current time?
+
+        # check ready queue
         if len(ready_queue) == 0:
             # nothing to do -> move forward one time unit (for optimisation, can fast forward to next process' arrival time)
             current_time += 1
             last_scheduled_id = -1
         else:
             # do first process in the ready queue
-            process_id, process_burst, process_quantum, process_earliest_end_time = ready_queue.pop(0)
+            process = ready_queue[0]
             
             if last_scheduled_id != process.id:
-              schedule.append( [current_time, process_id] )
+              schedule.append( (current_time, process.id) )
               last_scheduled_id = process.id
-            
-            # increment time
-            process.burst -= 1
-            process.quantum -= 1
-            current_time += 1
-            
-            if process.burst == 0:
+            #print "time %d: process id %d, burst %d, quantum %d" % (current_time, process.id, process.burst_time, process.quantum)
+            if process.burst_time == 0:
                 # done with this process
-                waiting_time += current_time - process_earliest_end_time
+                #print "done with process %d at time %d" % (process.id, current_time)
+                waiting_time += current_time - process.earliest_end_time
+                ready_queue.pop(0)
             elif process.quantum == 0:
-                # this process has used up its quantum -> move it to the back of the queue
-                ready_queue.append( [process)id, process_burst, time_quantum, process_earliest_end_time] )
+                # this process has used up its quantum -> move it to the back of the queue with reset time_quantum
+                process.quantum = time_quantum
+                ready_queue.pop(0)
+                ready_queue.append(process)
+            else:
+                # increment time
+                process.burst_time -= 1
+                process.quantum -= 1
+                current_time += 1
     
     average_waiting_time = waiting_time/float(len(process_list))
     return schedule, average_waiting_time
