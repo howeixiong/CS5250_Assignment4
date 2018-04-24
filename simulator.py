@@ -126,7 +126,7 @@ def SRTF_scheduling(process_list):
             
             # append process to queue if it has arrived
             if new_process.arrive_time == current_time:
-                heapq.heappush(ready_queue, (new_process.burst_time, Process_SRTF(new_process.id, new_process.burst_time, new_process.arrive_time + new_process.burst)) )
+                heapq.heappush(ready_queue, (new_process.burst_time, Process_SRTF(new_process.id, new_process.burst_time, new_process.arrive_time + new_process.burst_time)) )
                 process_index += 1
           
         # what should I do at this time?
@@ -139,18 +139,18 @@ def SRTF_scheduling(process_list):
             process_burst, process = ready_queue[0]
             
             if last_scheduled_id != process.id:
-                schedule.append( (current_time, process_id) )
+                schedule.append( (current_time, process.id) )
                 last_scheduled_id = process.id
             
-            if process.burst == 0:
+            if process.burst_time == 0:
                 # done with this process
-                waiting_time += current_time - process_earliest_end_time
+                waiting_time += current_time - process.earliest_end_time
                 heapq.heappop(ready_queue)
             else:
                 # increment time
-                process.burst -= 1
+                process.burst_time -= 1
                 current_time += 1
-                heapq.heappushpop(ready_queue, (process.burst, process))
+                heapq.heapreplace(ready_queue, (process.burst_time, process))
         
     average_waiting_time = waiting_time/float(len(process_list))
     return schedule, average_waiting_time
