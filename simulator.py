@@ -156,44 +156,46 @@ def SRTF_scheduling(process_list):
     return schedule, average_waiting_time
 
 def SJF_scheduling(process_list, alpha):
-process_index = 0
-current_time = 0
-ready_queue = []
-predicted_burst = {}
-last_scheduled_id = -1
-schedule = []
-waiting_time = 0
+    process_index = 0
+    current_time = 0
+    ready_queue = []
+    predicted_burst = {}
+    last_scheduled_id = -1
+    schedule = []
+    waiting_time = 0
 
-while (process_index < len(process_list)) or (len(ready_queue) > 0): # while there is something to do
-    while process_index < len(process_list): # can have more than one
-        new_process = process_list[process_index]
-        
-        # append process to queue if it has arrived
-        if new_process.arrive_time <= current_time:
-            if process.id not in predicted_burst:
-              predicted_burst[process.id] = 5
-            predicted_time = predicted_burst[process.id]
+    while (process_index < len(process_list)) or (len(ready_queue) > 0): # while there is something to do
+        while process_index < len(process_list): # can have more than one
+            new_process = process_list[process_index]
             
-            heapq.heappush(ready_queue, (predicted_time, Process_SRTF_SJF(new_process.id, new_process.burst_time, new_process.arrive_time + new_process.burst_time)) )
-            process_index += 1
-      
-    # what should I do at this time?
-    if len(ready_queue) == 0:
-        # nothing to do -> move forward one time unit
-        current_time += 1
-        last_scheduled_id = -1
-    else:
-        # do first process in the ready queue
-        process_burst, process = ready_queue[0]
-        
-        if last_scheduled_id != process.id:
-          schedule.append( (current_time, process.id) )
-          last_scheduled_id = process.id
+            # append process to queue if it has arrived
+            if new_process.arrive_time <= current_time:
+                if new_process.id not in predicted_burst:
+                  predicted_burst[new_process.id] = 5
+                predicted_time = predicted_burst[new_process.id]
+                
+                heapq.heappush(ready_queue, (predicted_time, Process_SRTF_SJF(new_process.id, new_process.burst_time, new_process.arrive_time + new_process.burst_time)) )
+                process_index += 1
+            else:
+                break
           
-        current_time += process.burst_time
-        waiting_time += current_time - process.earliest_end_time
-        heapq.heappop(ready_queue)
-        predicted_burst[process.id] = alpha * process.burst_time + (1 - alpha) * predicted_burst[process.id]
+        # what should I do at this time?
+        if len(ready_queue) == 0:
+            # nothing to do -> move forward one time unit
+            current_time += 1
+            last_scheduled_id = -1
+        else:
+            # do first process in the ready queue
+            process_burst, process = ready_queue[0]
+            
+            if last_scheduled_id != process.id:
+              schedule.append( (current_time, process.id) )
+              last_scheduled_id = process.id
+              
+            current_time += process.burst_time
+            waiting_time += current_time - process.earliest_end_time
+            heapq.heappop(ready_queue)
+            predicted_burst[process.id] = alpha * process.burst_time + (1 - alpha) * predicted_burst[process.id]
         
     average_waiting_time = waiting_time/float(len(process_list))
     return schedule, average_waiting_time
