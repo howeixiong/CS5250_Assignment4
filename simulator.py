@@ -105,46 +105,52 @@ def RR_scheduling(process_list, time_quantum ):
     
     average_waiting_time = waiting_time/float(len(process_list))
     return schedule, average_waiting_time
+    
+class Process_SRTF:
+    def __init__(self, id, burst_time, earliest_end_time):
+        self.id = id
+        self.burst_time = burst_time
+        self.earliest_end_time = earliest_end_time
 
 def SRTF_scheduling(process_list):
-    #store the (switching time, process_id) pair
-    schedule = []
-    ready_queue = []
+    process_index = 0
     current_time = 0
-    waiting_time = 0
+    ready_queue = []
     last_scheduled_id = -1
-    for process in process_list:
-        if (current_time < process.arrive_time):
-            time_to_go = process.arrive_time - current_time
-            while (time_to_go > 0):
-                if len(ready_queue) == 0:
-                    current_time = process.arrive_time
-                    last_scheduled_id = -1
-                    break
-                burst, process_id = heapq.heappop(ready_queue)
-                if (process_id != last_scheduled_id):
-                    schedule.append((current_time,process_id))
-                    last_scheduled_id = process_id
-                if (time_to_go < burst):
-                    burst -= time_to_go
-                    heapq.heappush(ready_queue, [burst, process_id])
-                    current_time += time_to_go
-                    waiting_time += (len(ready_queue) - 1) * time_to_go
-                    time_to_go = 0
-                    break
-                time_to_go -= burst
-                current_time += burst
-                waiting_time += len(ready_queue) * burst
-        # i think need to deal with the case where the process is there already
-        heapq.heappush(ready_queue, [process.burst_time, process.id])
-    # code easier now
-    while (len(ready_queue) > 0):
-        burst, process_id = heapq.heappop(ready_queue)
-        if (process_id != last_scheduled_id):
-            schedule.append((current_time,process_id))
-            last_scheduled_id = process_id
-        current_time += burst
-        waiting_time += len(ready_queue) * burst
+    schedule = []
+    waiting_time = 0
+
+    while (process_index < len(process_list)) or (len(ready_queue) > 0): # while there is something to do
+        if process_index < len(process_list):
+            new_process = process_list[process_index]
+            
+            # append process to queue if it has arrived
+            if new_process.arrive_time == current_time:
+                heapq.heappush(ready_queue, (new_process.burst_time, Process_SRTF(new_process.id, new_process.burst_time, new_process.arrive_time + new_process.burst)) )
+                process_index += 1
+          
+        # what should I do at this time?
+        if len(ready_queue) == 0:
+            # nothing to do -> move forward one time unit
+            current_time += 1
+            last_scheduled_id = -1
+        else:
+            # do first process in the ready queue
+            process_burst, process = ready_queue[0]
+            
+            if last_scheduled_id != process.id:
+                schedule.append( (current_time, process_id) )
+                last_scheduled_id = process.id
+            
+            if process.burst == 0:
+                # done with this process
+                waiting_time += current_time - process_earliest_end_time
+                heapq.heappop(ready_queue)
+            else:
+                # increment time
+                process.burst -= 1
+                current_time += 1
+                heapq.heappushpop(ready_queue, (process.burst, process))
         
     average_waiting_time = waiting_time/float(len(process_list))
     return schedule, average_waiting_time
